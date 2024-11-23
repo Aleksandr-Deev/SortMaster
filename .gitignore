@@ -1,5 +1,11 @@
 ### IntelliJ IDEA ###
 out/
+.idea/
+.idea_modules/
+.idea_workspace.xml
+iml/
+!**/out/**
+!**/target/**
 !**/src/main/**/out/
 !**/src/test/**/out/
 
