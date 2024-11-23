@@ -1,4 +1,6 @@
 ### IntelliJ IDEA ###
+*.java~
+*.iml
 out/
 .idea/
 .idea_modules/
@@ -8,8 +10,7 @@ iml/
 !**/target/**
 !**/src/main/**/out/
 !**/src/test/**/out/
-*.java~
-*.iml
+
 
 ### Eclipse ###
 .apt_generated
