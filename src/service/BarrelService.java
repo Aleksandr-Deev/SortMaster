@@ -2,6 +2,7 @@ package service;
 
 import entity.Barrel;
 import strategy.Strategy;
+import utils.InputUtils;
 
 import java.io.*;
 import java.util.*;
@@ -13,8 +14,8 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
     public List<Barrel<T>> fillData() {
         List<Barrel<T>> barrels = new ArrayList<>();
         System.out.println("Как заполнить данные? 1 - Вручную, 2 - Рандомно, 3 - Из файла");
-        int choice = getIntInput("Ваш выбор: ");
-        int length = getIntInput("Введите желаемую длину массива:");
+        int choice = InputUtils.getIntInput("Ваш выбор: ");
+        int length = InputUtils.getIntInput("Введите желаемую длину массива:");
 
         switch (choice) {
             case 1 -> fillDataManually(barrels, length);
@@ -25,25 +26,14 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
         return barrels;
     }
 
+
     private void fillDataManually(List<Barrel<T>> barrels, int length) {
         for (int i = 0; i < length; i++) {
             System.out.println("Введите данные для бочки №" + (i + 1));
-
-            double volume;
-            while (true) {
-                volume = getDoubleInput("Введите объем бочки (положительное число): ");
-                if (volume > 0) break;
-                System.out.println("Объем должен быть больше 0. Попробуйте снова.");
-            }
-
-            String materialType = getStringInput("Введите тип хранимого материала:");
-            String material = getStringInput("Введите материал, из которого изготовлена бочка:");
-
-            barrels.add(new Barrel.Builder<T>()
-                    .volume(volume)
-                    .materialType((T) materialType)
-                    .material(material)
-                    .build());
+            double volume = InputUtils.getDoubleInput("Введите объем бочки (положительное число): ");
+            String materialType = InputUtils.getStringInput("Введите тип хранимого материала:");
+            String material = InputUtils.getStringInput("Введите материал, из которого изготовлена бочка:");
+            barrels.add(new Barrel.Builder<T>().volume(volume).materialType((T) materialType).material(material).build());
         }
     }
 
@@ -86,6 +76,10 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
 
     @Override
     public void sort(List<Barrel<T>> data) {
+        if (!(data instanceof ArrayList)) {
+            data = new ArrayList<>(data); // Изменяемая копия, если список неизменяемый
+        }
+
         System.out.println("Как сортировать? 1 - По объему, 2 - По материалу");
         int choice = getIntInput("Ваш выбор: ");
 
@@ -98,13 +92,20 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
 
     @Override
     public int search(List<Barrel<T>> data, Barrel<T> key) {
-        // Поиск по умолчанию — например, по объему
+        // Создаём изменяемую копию списка, если он неизменяемый
+        if (!(data instanceof ArrayList)) {
+            data = new ArrayList<>(data);
+        }
+        // Поиск с использованием компаратора по объему
         return search(data, key, Comparator.comparing(Barrel::getVolume));
     }
 
     public int search(List<Barrel<T>> data, Barrel<T> key, Comparator<Barrel<T>> comparator) {
-        data.sort(comparator);
-
+        // Убедимся, что список изменяемый
+        if (!(data instanceof ArrayList)) {
+            data = new ArrayList<>(data);
+        }
+        data.sort(comparator); // Сортировка
         int low = 0, high = data.size() - 1;
 
         while (low <= high) {
