@@ -15,7 +15,7 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
         List<Barrel<T>> barrels = new ArrayList<>();
         System.out.println("Как заполнить данные? 1 - Вручную, 2 - Рандомно, 3 - Из файла");
         int choice = InputUtils.getIntInput("Ваш выбор: ");
-        int length = InputUtils.getIntInput("Введите желаемую длину массива:");
+        int length = getArrayLength();
 
         switch (choice) {
             case 1 -> fillDataManually(barrels, length);
@@ -24,6 +24,17 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
             default -> System.out.println("Некорректный выбор!");
         }
         return barrels;
+    }
+
+    private int getArrayLength() {
+        int length;
+        do {
+            length = InputUtils.getIntInput("Введите желаемую длину массива (положительное число): ");
+            if (length <= 0) {
+                System.out.println("Длина должна быть положительным числом. Попробуйте снова.");
+            }
+        } while (length <= 0);
+        return length;
     }
 
 
@@ -92,20 +103,14 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
 
     @Override
     public int search(List<Barrel<T>> data, Barrel<T> key) {
-        // Создаём изменяемую копию списка, если он неизменяемый
-        if (!(data instanceof ArrayList)) {
-            data = new ArrayList<>(data);
-        }
-        // Поиск с использованием компаратора по объему
-        return search(data, key, Comparator.comparing(Barrel::getVolume));
+        return search(data, key, Comparator.comparing(Barrel::getVolume)); // Сортировка по объему по умолчанию
     }
 
     public int search(List<Barrel<T>> data, Barrel<T> key, Comparator<Barrel<T>> comparator) {
-        // Убедимся, что список изменяемый
         if (!(data instanceof ArrayList)) {
             data = new ArrayList<>(data);
         }
-        data.sort(comparator); // Сортировка
+        data.sort(comparator);
         int low = 0, high = data.size() - 1;
 
         while (low <= high) {
@@ -118,12 +123,11 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
             } else if (cmp > 0) {
                 high = mid - 1;
             } else {
-                return mid; // Найден
+                return mid;
             }
         }
-        return -1; // Не найден
+        return -1;
     }
-
     private int getIntInput(String prompt) {
         while (true) {
             System.out.print(prompt);

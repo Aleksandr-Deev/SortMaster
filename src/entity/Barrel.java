@@ -1,6 +1,6 @@
 package entity;
 
-public class Barrel<T> implements Comparable<Barrel<T>>{
+public class Barrel<T>  implements Comparable<Barrel<T>>{
     private double volume;
     private T materialType;
     private String material;
@@ -48,7 +48,6 @@ public class Barrel<T> implements Comparable<Barrel<T>>{
         return Double.compare(this.volume, other.volume);
     }
 
-    // Переопределение toString для удобства
     @Override
     public String toString() {
         return "Бочка [объем бочки = " + volume + ", хранимый материал = " + materialType + ", материал бочки = " + material + "]";
