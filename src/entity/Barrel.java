@@ -42,15 +42,15 @@ public class Barrel<T>  implements Comparable<Barrel<T>>{
     @Override
     public int compareTo(Barrel<T> other) {
         if (other == null) {
-            throw new NullPointerException("Невозможно сравнить с null-объектомl");
+            return 1; // Можно вернуть любое значение, чтобы указать, что this больше null
         }
-        // Сравнение по объему
         return Double.compare(this.volume, other.volume);
     }
 
+
     @Override
     public String toString() {
-        return "Бочка [объем бочки = " + volume + ", хранимый материал = " + materialType + ", материал бочки = " + material + "]";
+        return String.format("Бочка [объем бочки = %.2f, хранимый материал = %s, материал бочки = %s]", volume, materialType, material);
     }
 
     public static class Builder<T> {

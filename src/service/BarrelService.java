@@ -7,6 +7,8 @@ import utils.InputUtils;
 import java.io.*;
 import java.util.*;
 
+import static utils.InputUtils.getIntInput;
+
 public class BarrelService<T> implements Strategy<Barrel<T>> {
     private final Scanner scanner = new Scanner(System.in);
 
@@ -14,7 +16,7 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
     public List<Barrel<T>> fillData() {
         List<Barrel<T>> barrels = new ArrayList<>();
         System.out.println("Как заполнить данные? 1 - Вручную, 2 - Рандомно, 3 - Из файла");
-        int choice = InputUtils.getIntInput("Ваш выбор: ");
+        int choice = getIntInput("Ваш выбор: ");
         int length = getArrayLength();
 
         switch (choice) {
@@ -29,29 +31,28 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
     private int getArrayLength() {
         int length;
         do {
-            length = InputUtils.getIntInput("Введите желаемую длину массива (положительное число): ");
+            length = getIntInput("Введите желаемую количество бочек (положительное число): ");
             if (length <= 0) {
-                System.out.println("Длина должна быть положительным числом. Попробуйте снова.");
+                System.out.println("Количество бочек должна быть положительным числом. Попробуйте снова.");
             }
         } while (length <= 0);
         return length;
     }
 
-
     private void fillDataManually(List<Barrel<T>> barrels, int length) {
         for (int i = 0; i < length; i++) {
             System.out.println("Введите данные для бочки №" + (i + 1));
             double volume = InputUtils.getDoubleInput("Введите объем бочки (положительное число): ");
-            String materialType = InputUtils.getStringInput("Введите тип хранимого материала:");
+            T materialType = (T) InputUtils.getStringInput("Введите тип хранимого материала:");  // Приведение к типу T
             String material = InputUtils.getStringInput("Введите материал, из которого изготовлена бочка:");
-            barrels.add(new Barrel.Builder<T>().volume(volume).materialType((T) materialType).material(material).build());
+            barrels.add(new Barrel.Builder<T>().volume(volume).materialType(materialType).material(material).build());
         }
     }
 
     private void fillDataRandomly(List<Barrel<T>> barrels, int length) {
         for (int i = 0; i < length; i++) {
             double volume = Math.random() * 100;
-            T materialType = (T) ("MaterialType" + (i + 1));
+            T materialType = (T) ("MaterialType" + (i + 1));  // Приведение типа
             String material = "Material" + (i + 1);
 
             Barrel<T> barrel = new Barrel.Builder<T>()
@@ -70,34 +71,67 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
             String line;
             while ((line = reader.readLine()) != null && barrels.size() < length) {
                 String[] parts = line.split(",");
-                double volume = Double.parseDouble(parts[0]);
-                T materialType = (T) parts[1];
-                String material = parts[2];
 
-                barrels.add(new Barrel.Builder<T>()
-                        .volume(volume)
-                        .materialType(materialType)
-                        .material(material)
-                        .build());
+                if (parts.length < 3) {
+                    System.out.println("Ошибка: некорректный формат данных в строке: " + line);
+                    continue; // Пропустить эту строку
+                }
+
+                try {
+                    double volume = Double.parseDouble(parts[0]);
+                    // Преобразование materialType в тип T
+                    T materialType = convertToMaterialType(parts[1]); // Метод для преобразования
+                    String material = parts[2];
+
+                    barrels.add(new Barrel.Builder<T>()
+                            .volume(volume)
+                            .materialType(materialType)  // Передаем T
+                            .material(material)
+                            .build());
+                } catch (NumberFormatException e) {
+                    System.out.println("Ошибка преобразования данных: " + e.getMessage());
+                }
             }
-        } catch (IOException | NumberFormatException e) {
+        } catch (IOException e) {
             System.out.println("Ошибка чтения файла: " + e.getMessage());
         }
     }
 
+    // Пример метода для конвертации строки в тип T
+    private T convertToMaterialType(String str) {
+        // Пример для строкового типа T
+        return (T) str; // Простое приведение
+    }
+
+
     @Override
     public void sort(List<Barrel<T>> data) {
+        System.out.println("Как сортировать? 1 - По объему, 2 - По материалу, 3 - По типу хранимого материала");
+        int choice = getIntInput("Ваш выбор: ");
+
+        switch (choice) {
+            case 1 -> sort(data, Comparator.comparing(Barrel::getVolume)); // Сортировка по объему
+            case 2 -> sort(data, Comparator.comparing(Barrel::getMaterial)); // Сортировка по материалу бочки
+            case 3 -> sort(data, Comparator.comparing(barrel -> barrel.getMaterialType().toString()));  // По типу хранимого материала
+            default -> System.out.println("Некорректный выбор!");
+        }
+    }
+
+    public static <T> void sort(List<T> data, Comparator<? super T> comparator) {
+        if (data == null || data.isEmpty()) {
+            System.out.println("Список пуст или null. Сортировка невозможна.");
+            return;
+        }
+
         if (!(data instanceof ArrayList)) {
             data = new ArrayList<>(data); // Изменяемая копия, если список неизменяемый
         }
 
-        System.out.println("Как сортировать? 1 - По объему, 2 - По материалу");
-        int choice = getIntInput("Ваш выбор: ");
-
-        switch (choice) {
-            case 1 -> Collections.sort(data); // Сортировка по объему
-            case 2 -> data.sort(Comparator.comparing(Barrel::getMaterial)); // Сортировка по материалу
-            default -> System.out.println("Некорректный выбор!");
+        try {
+            data.sort(comparator); // Используем Comparator для сортировки
+            System.out.println("Сортировка завершена.");
+        } catch (Exception e) {
+            System.out.println("Ошибка при сортировке: " + e.getMessage());
         }
     }
 
@@ -107,84 +141,56 @@ public class BarrelService<T> implements Strategy<Barrel<T>> {
     }
 
     public int search(List<Barrel<T>> data, Barrel<T> key, Comparator<Barrel<T>> comparator) {
+        // Если переданный список не является экземпляром ArrayList, он копируется в новый список типа ArrayList
         if (!(data instanceof ArrayList)) {
+            // сортировка перед бинарным поиском
             data = new ArrayList<>(data);
         }
         data.sort(comparator);
-        int low = 0, high = data.size() - 1;
+        int min = 0, max = data.size() - 1;
 
-        while (low <= high) {
-            int mid = (low + high) / 2;
-            Barrel<T> midBarrel = data.get(mid);
-            int cmp = comparator.compare(midBarrel, key);
+        while (min <= max) {
+            int mid = (min + max) / 2; //индекс среднего элемента
+            Barrel<T> midBarrel = data.get(mid); // извлекается сам объект из списка
+            int cmp = comparator.compare(midBarrel, key); // сравнение среднего с искомым с помощью компаратора
 
             if (cmp < 0) {
-                low = mid + 1;
+                min = mid + 1; // если средний меньше искомого, то ищем в правой половине
             } else if (cmp > 0) {
-                high = mid - 1;
+                max = mid - 1; // если средний больше искомого, то ищем в левой половине
             } else {
-                return mid;
+                return mid; // если средний равен искомому, то возвращается индекс
             }
         }
         return -1;
     }
-    private int getIntInput(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return scanner.nextInt();
-            } catch (InputMismatchException e) {
-                System.out.println("Ошибка: введите целое число!");
-                scanner.next(); // Очистка неверного ввода
-            }
-        }
-    }
-
-    private double getDoubleInput(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            try {
-                return scanner.nextDouble();
-            } catch (InputMismatchException e) {
-                System.out.println("Ошибка: введите числовое значение!");
-                scanner.next(); // Очистка неверного ввода
-            }
-        }
-    }
-
-    private String getStringInput(String prompt) {
-        System.out.print(prompt);
-        return scanner.next();
-    }
+}
 
 //    // Дополнительная сортировка четные/нечетные
 //    public void sortEvenOdd(List<Barrel<T>> data) {
-//        List<Barrel<T>> even = new ArrayList<>();
-//        for (Barrel<T> barrel : data) {
-//            if ((int) barrel.getVolume() % 2 == 0) {
-//                even.add(barrel);
-//            }
-//        }
-//        even.sort(Comparator.comparing(Barrel::getVolume));
+//        data.sort((barrel1, barrel2) -> {
+//            // Сортировка по четности (сначала четные, потом нечетные)
+//            int evenOddCompare = (int) barrel1.getVolume() % 2 - (int) barrel2.getVolume() % 2;
 //
-//        int evenIndex = 0;
-//        for (int i = 0; i < data.size(); i++) {
-//            if ((int) data.get(i).getVolume() % 2 == 0) {
-//                data.set(i, even.get(evenIndex++));
+//            // Если оба четные или оба нечетные, то сортируем по объему
+//            if (evenOddCompare == 0) {
+//                return Double.compare(barrel1.getVolume(), barrel2.getVolume());
 //            }
-//        }
+//
+//            return evenOddCompare;
+//        });
 //    }
 //
 //    // Запись результатов в файл
 //    public void saveToFile(List<Barrel<T>> data, String filePath) {
 //        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
 //            for (Barrel<T> barrel : data) {
-//                writer.write(barrel.toString());
-//                writer.newLine();
+//                writer.write(barrel.toString());  // Можно улучшить формат записи
+//                writer.newLine(); // Добавилась нова строка
 //            }
 //            System.out.println("Данные успешно сохранены в файл.");
 //        } catch (IOException e) {
 //            System.out.println("Ошибка записи в файл: " + e.getMessage());
 //        }
-//  }
-}
+//    }
+

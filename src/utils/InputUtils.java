@@ -14,7 +14,7 @@ public class InputUtils {
                 return scanner.nextInt();
             } catch (InputMismatchException e) {
                 System.out.println("Ошибка: введите целое число!");
-                scanner.next(); // Очистка неверного ввода
+                scanner.nextLine(); // Очистка неверного ввода (например, если ввели текст)
             }
         }
     }
@@ -25,14 +25,15 @@ public class InputUtils {
             try {
                 return scanner.nextDouble();
             } catch (InputMismatchException e) {
-                System.out.println("Ошибка: введите числовое значение!");
-                scanner.next(); // Очистка неверного ввода
+                System.out.println("Ошибка: введите корректное числовое значение!");
+                scanner.nextLine(); // Очистка неверного ввода (например, если ввели буквы)
             }
         }
     }
 
     public static String getStringInput(String prompt) {
         System.out.print(prompt);
-        return scanner.next();
+        // nextLine() для считывания всей строки
+        return scanner.nextLine();
     }
 }
